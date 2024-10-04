@@ -42,6 +42,22 @@ RUN npm run build || true
 # Temporary fix: Compile TypeScript ignoring all errors
 RUN npx tsc --skipLibCheck --noEmit --noErrorTruncation --diagnostics --pretty false || true
 
+# Install system dependencies for canvas
+RUN apk add --no-cache \
+    build-base \
+    g++ \
+    cairo-dev \
+    jpeg-dev \
+    pango-dev \
+    giflib-dev \
+    pixman-dev \
+    pangomm-dev \
+    libjpeg-turbo-dev \
+    freetype-dev
+
+# Install Node.js dependencies
+RUN npm ci --only=production
+
 # Stage 2: Use Stage
 FROM node:18-alpine AS tiktok_scraper.use
 
@@ -68,12 +84,6 @@ ENV SCRAPING_FROM_DOCKER=1
 
 # Create the files directory
 RUN mkdir -p files
-
-# Install dependencies in production mode
-RUN npm ci --only=production
-
-# Copy the rest of the application code
-COPY . .
 
 # Set correct permissions for cli.js
 RUN chmod +x bin/cli.js
