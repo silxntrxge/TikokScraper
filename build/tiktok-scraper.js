@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { getRandomUserAgent } from './constant.js';
-import cheerio from 'cheerio';
+import * as cheerio from 'cheerio';
 
 class TikTokScraper {
   constructor(options = {}) {
