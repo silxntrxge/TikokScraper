@@ -26,7 +26,9 @@ RUN apk update && apk add --no-cache \
 # Copy package.json and package-lock.json
 COPY package*.json ./
 
-ENV CANVAS_PREBUILT=1
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
+
 RUN npm install
 
 # Copy tsconfig.json
@@ -37,26 +39,7 @@ COPY ./src ./src
 COPY ./bin ./bin
 
 # Build the project
-RUN npm run build || true
-
-# Temporary fix: Compile TypeScript ignoring all errors
-RUN npx tsc --skipLibCheck --noEmit --noErrorTruncation --diagnostics --pretty false || true
-
-# Install system dependencies for canvas
-RUN apk add --no-cache \
-    build-base \
-    g++ \
-    cairo-dev \
-    jpeg-dev \
-    pango-dev \
-    giflib-dev \
-    pixman-dev \
-    pangomm-dev \
-    libjpeg-turbo-dev \
-    freetype-dev
-
-# Install Node.js dependencies
-RUN npm ci --only=production
+RUN npm run build
 
 # Stage 2: Use Stage
 FROM node:18-alpine AS tiktok_scraper.use
@@ -72,7 +55,13 @@ RUN apk update && apk add --no-cache \
     freetype-dev \
     harfbuzz \
     ca-certificates \
-    ttf-freefont
+    ttf-freefont \
+    pixman \
+    cairo \
+    pango \
+    libjpeg-turbo \
+    giflib \
+    libpng
 
 # Copy necessary files from the build stage
 COPY --from=tiktok_scraper.build /usr/app/package*.json ./
@@ -81,6 +70,8 @@ COPY --from=tiktok_scraper.build /usr/app/bin ./bin
 COPY --from=tiktok_scraper.build /usr/app/node_modules ./node_modules
 
 ENV SCRAPING_FROM_DOCKER=1
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
 
 # Create the files directory
 RUN mkdir -p files
@@ -90,10 +81,6 @@ RUN chmod +x bin/cli.js
 
 # Install PM2 globally
 RUN npm install pm2 -g
-
-# Set environment variables for Puppeteer
-ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
-ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
 
 # Expose the port (adjust if necessary)
 EXPOSE 10000
