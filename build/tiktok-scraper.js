@@ -11,7 +11,10 @@ class TikTokScraper {
       },
     });
     this.logger = options.logger || console;
-    this.logger.log(`[${new Date().toISOString()}] TikTokScraper: Constructor called with params:`, this.params);
+    this.logger.log(
+      `[${new Date().toISOString()}] TikTokScraper: Constructor called with params:`,
+      this.params
+    );
   }
 
   async scrape(params) {
@@ -54,7 +57,7 @@ class TikTokScraper {
       this.logger.log(`Making request to TikTok API: ${url}`);
       const response = await this.axios.get(url);
       this.logger.log('Received response from TikTok API:', response.status);
-      const items = await this.parseResponse(response.data);
+      const items = await this.parseResponse(response.data, 'user');
       this.logger.log(`Processed ${items.length} items from user feed`);
       return items;
     } catch (error) {
@@ -70,7 +73,7 @@ class TikTokScraper {
       this.logger.log('Making request to TikTok API:', url);
       const response = await this.makeRequest(url);
       this.logger.log('Received response from TikTok API:', response.status);
-      const items = await this.parseResponse(response.data);
+      const items = await this.parseResponse(response.data, 'hashtag');
       this.logger.log(`Processed ${items.length} items from hashtag feed`);
       return items;
     } catch (error) {
@@ -86,7 +89,7 @@ class TikTokScraper {
       this.logger.log(`Making request to TikTok API: ${url}`);
       const response = await this.axios.get(url);
       this.logger.log('Received response from TikTok API:', response.status);
-      const items = await this.parseResponse(response.data);
+      const items = await this.parseResponse(response.data, 'trend');
       this.logger.log(`Processed ${items.length} items from trending feed`);
       return items;
     } catch (error) {
@@ -112,24 +115,24 @@ class TikTokScraper {
     }
   }
 
-  async parseResponse(html) {
-    this.logger.log(`Starting parseResponse method. HTML length: ${html.length}`);
+  async parseResponse(html, type) {
+    this.logger.log(`Starting parseResponse method for type: ${type}. HTML length: ${html.length}`);
 
     const $ = cheerio.load(html);
     const collector = [];
 
     this.logger.log(`Applying cheerio to find video items`);
 
-    // Select all video containers based on the CSS classes observed in the HTML
-    $('div.css-supo48-DivPlayerContainer').each((index, element) => {
+    // Select all video containers by looking for <div> elements that contain a <video> tag
+    $('div').has('video').each((index, element) => {
       const videoContainer = $(element);
 
       // Extract the video URL
       const videoUrl = videoContainer.find('video').attr('src');
       const videoId = videoUrl ? videoUrl.split('/').pop().split('?')[0] : null;
 
-      // Extract the video title
-      const videoTitle = videoContainer.find('h1.css-198cw7i-H1Container').text().trim();
+      // Extract the video title from the associated <img> alt attribute
+      const videoTitle = videoContainer.find('img').attr('alt') || 'No Title';
 
       if (videoId && videoTitle && videoUrl) {
         collector.push({

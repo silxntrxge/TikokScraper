@@ -110,10 +110,10 @@ app.post('/scrape', async (req, res) => {
         };
         log('Initializing scraper with params:', params);
         const result = await scraperInstance.scrape(params);
-        
-        if (result && result.length > 0) {
-            log(`Successfully scraped ${result.length} items.`);
-            res.json({ success: true, data: result });
+
+        if (result && result.collector && result.collector.length > 0) {
+            log(`Successfully scraped ${result.collector.length} items.`);
+            res.json({ success: true, data: result.collector });
         } else {
             log('No items scraped.');
             res.json({ success: false, message: 'No items scraped' });
@@ -168,10 +168,14 @@ async function startScraper() {
                 if (result && result.collector && result.collector.length > 0) {
                     log(`CLI: Successfully scraped ${result.collector.length} items.`);
                     log('CLI: First few scraped items:', result.collector.slice(0, 3));
-                    console.log(JSON.stringify({ success: true, data: result }));
+                    console.log(JSON.stringify({ success: true, data: result.collector }));
                 } else {
                     log('CLI: No items scraped. Scraper result:', result);
                     console.log(JSON.stringify({ success: false, message: 'No items scraped', data: result }));
+
+                    // Optional: Save the HTML response for debugging
+                    // fs.writeFileSync('scraped_fyp.html', await scraper.getLastHtml());
+
                 }
             } catch (scrapeError) {
                 log('CLI: Error occurred during scraping:', scrapeError);

@@ -4,7 +4,7 @@ FROM node:18-alpine AS tiktok_scraper.build
 WORKDIR /usr/app
 
 # Install necessary Alpine packages
-RUN apk update && apk add --update python3 pkgconfig pixman-dev cairo-dev pango-dev make g++
+RUN apk update && apk add --no-cache python3 pkgconfig pixman-dev cairo-dev pango-dev make g++ chromium nss freetype freetype-dev harfbuzz ca-certificates ttf-freefont
 
 # Copy package.json and package-lock.json
 COPY package*.json ./
@@ -29,7 +29,7 @@ FROM node:18-alpine AS tiktok_scraper.use
 WORKDIR /usr/app
 
 # Install necessary Alpine packages
-RUN apk update && apk add --update python3 pkgconfig pixman-dev cairo-dev pango-dev make g++
+RUN apk update && apk add --no-cache python3 chromium nss freetype freetype-dev harfbuzz ca-certificates ttf-freefont
 
 # Copy necessary files from the build stage
 COPY --from=tiktok_scraper.build /usr/app/package*.json ./
@@ -53,6 +53,10 @@ RUN chmod +x bin/cli.js
 
 # Install PM2 globally
 RUN npm install pm2 -g
+
+# Set environment variables for Puppeteer
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
 
 # Expose the port (adjust if necessary)
 EXPOSE 10000
