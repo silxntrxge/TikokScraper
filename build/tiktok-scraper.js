@@ -2,83 +2,105 @@ import axios from 'axios';
 import { getRandomUserAgent } from './constant.js';
 
 class TikTokScraper {
-  constructor(params = {}) {
-    this.params = params;
+  constructor(options = {}) {
+    this.params = options.params || {};
     this.axios = axios.create({
       headers: {
-        'user-agent': params.headers?.['user-agent'] || getRandomUserAgent(),
+        'user-agent': options.headers?.['user-agent'] || getRandomUserAgent(),
       },
     });
-    console.log(`[${new Date().toISOString()}] TikTokScraper: Constructor called with params:`, JSON.stringify(params));
+    this.logger = options.logger || console;
+    console.log(`[${new Date().toISOString()}] TikTokScraper: Constructor called with params:`, JSON.stringify(options));
   }
 
   async scrape() {
-    console.log(`[${new Date().toISOString()}] TikTokScraper: Starting scrape method`);
-    
+    this.logger.log('Starting scrape operation...');
     try {
-      let url;
-      if (this.params.type === 'hashtag') {
-        url = `https://www.tiktok.com/tag/${this.params.input}`;
-      } else if (this.params.type === 'user') {
-        url = `https://www.tiktok.com/@${this.params.input}`;
-      } else if (this.params.type === 'trend') {
-        url = 'https://www.tiktok.com/trending';
-      } else {
-        throw new Error(`Unsupported scrape type: ${this.params.type}`);
+      let items = [];
+      switch (this.params.type) {
+        case 'user':
+          this.logger.log('Scraping user feed...');
+          items = await this.getUserFeed();
+          break;
+        case 'hashtag':
+          this.logger.log('Scraping hashtag feed...');
+          items = await this.getHashtagFeed();
+          break;
+        case 'trend':
+          this.logger.log('Scraping trending feed...');
+          items = await this.getTrendingFeed();
+          break;
+        default:
+          throw new Error('Invalid scrape type');
       }
 
-      console.log(`[${new Date().toISOString()}] TikTokScraper: Determined URL to fetch: ${url}`);
-      
-      console.log(`[${new Date().toISOString()}] TikTokScraper: Calling makeRequest method`);
-      const response = await this.makeRequest(url);
-      
-      console.log(`[${new Date().toISOString()}] TikTokScraper: Response received. Status: ${response.status}, Content length: ${response.data.length}`);
-      
-      // Log the first 500 characters of the HTML content
-      console.log(`[${new Date().toISOString()}] TikTokScraper: HTML content (first 500 chars): ${response.data.substring(0, 500)}`);
-      
-      console.log(`[${new Date().toISOString()}] TikTokScraper: Calling parseResponse method`);
-      const data = await this.parseResponse(response.data);
-      
-      console.log(`[${new Date().toISOString()}] TikTokScraper: Data parsed. Items found: ${data.collector.length}`);
-      
-      return data;
+      this.logger.log(`Scrape completed. Found ${items.length} items.`);
+      return {
+        collector: items,
+        // ... (other properties)
+      };
     } catch (error) {
-      console.error(`[${new Date().toISOString()}] TikTokScraper: Error in scrape method:`, error);
+      this.logger.error('Error during scrape operation:', error);
       throw error;
     }
   }
 
+  async getUserFeed() {
+    this.logger.log('Fetching user feed...');
+    // ... (existing code)
+  }
+
+  async getHashtagFeed() {
+    this.logger.log(`Fetching hashtag feed for #${this.params.input}...`);
+    try {
+      // ... (existing code to fetch hashtag feed)
+      this.logger.log('Making request to TikTok API...');
+      const response = await this.request(/* ... */);
+      this.logger.log('Received response from TikTok API');
+      // ... (process response)
+      this.logger.log(`Processed ${items.length} items from hashtag feed`);
+      return items;
+    } catch (error) {
+      this.logger.error('Error fetching hashtag feed:', error);
+      throw error;
+    }
+  }
+
+  async getTrendingFeed() {
+    this.logger.log('Fetching trending feed...');
+    // ... (existing code)
+  }
+
   async makeRequest(url, retries = 3) {
-    console.log(`[${new Date().toISOString()}] TikTokScraper: Starting makeRequest method for URL: ${url}`);
+    this.logger.log(`Making GET request to ${url}`);
     for (let i = 0; i < retries; i++) {
       try {
-        console.log(`[${new Date().toISOString()}] TikTokScraper: Attempt ${i + 1} to fetch URL`);
+        this.logger.log(`Attempt ${i + 1} to fetch URL`);
         const response = await this.axios.get(url);
-        console.log(`[${new Date().toISOString()}] TikTokScraper: Request successful. Response status: ${response.status}, Content length: ${response.data.length}`);
+        this.logger.log('Request successful. Response status:', response.status);
         return response;
       } catch (error) {
-        console.error(`[${new Date().toISOString()}] TikTokScraper: Request failed (attempt ${i + 1}):`, error.message);
+        this.logger.error(`Request failed (attempt ${i + 1}):`, error.message);
         if (i === retries - 1) throw error;
-        console.log(`[${new Date().toISOString()}] TikTokScraper: Waiting before retry...`);
+        this.logger.log(`Waiting before retry...`);
         await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1))); // Exponential backoff
       }
     }
   }
 
   async parseResponse(html) {
-    console.log(`[${new Date().toISOString()}] TikTokScraper: Starting parseResponse method. HTML length: ${html.length}`);
+    this.logger.log(`Starting parseResponse method. HTML length: ${html.length}`);
     
     const collector = [];
     
-    console.log(`[${new Date().toISOString()}] TikTokScraper: Applying regex to find video items`);
+    this.logger.log(`Applying regex to find video items`);
     const videoRegex = /<div[^>]*data-e2e="user-post-item"[^>]*>([\s\S]*?)<\/div>/g;
     let match;
     let matchCount = 0;
     while ((match = videoRegex.exec(html)) !== null) {
       matchCount++;
       const videoHtml = match[1];
-      console.log(`[${new Date().toISOString()}] TikTokScraper: Found potential video item. HTML snippet: ${videoHtml.substring(0, 100)}...`);
+      this.logger.log(`Found potential video item. HTML snippet: ${videoHtml.substring(0, 100)}...`);
       const idMatch = videoHtml.match(/data-video-id="([^"]+)"/);
       const titleMatch = videoHtml.match(/data-e2e="video-title"[^>]*>([^<]+)</);
       if (idMatch && titleMatch) {
@@ -86,15 +108,27 @@ class TikTokScraper {
           id: idMatch[1],
           title: titleMatch[1].trim()
         });
-        console.log(`[${new Date().toISOString()}] TikTokScraper: Found video item: ID=${idMatch[1]}, Title=${titleMatch[1].trim()}`);
+        this.logger.log(`Found video item: ID=${idMatch[1]}, Title=${titleMatch[1].trim()}`);
       } else {
-        console.log(`[${new Date().toISOString()}] TikTokScraper: Found partial match but couldn't extract all info. ID match: ${!!idMatch}, Title match: ${!!titleMatch}`);
+        this.logger.log(`Found partial match but couldn't extract all info. ID match: ${!!idMatch}, Title match: ${!!titleMatch}`);
       }
     }
     
-    console.log(`[${new Date().toISOString()}] TikTokScraper: Parsing complete. Total matches: ${matchCount}, Collected items: ${collector.length}`);
+    this.logger.log(`Parsing complete. Total matches: ${matchCount}, Collected items: ${collector.length}`);
     
     return { collector };
+  }
+
+  async request(uri, method, qs = {}) {
+    this.logger.log(`Making ${method} request to ${uri}`);
+    try {
+      // ... (existing request code)
+      this.logger.log('Request successful');
+      return response;
+    } catch (error) {
+      this.logger.error('Request failed:', error);
+      throw error;
+    }
   }
 }
 

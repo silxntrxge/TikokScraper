@@ -114,6 +114,10 @@ async function startScraper() {
             headers: {
                 'user-agent': getRandomUserAgent(),
             },
+            logger: {
+                log: (message, ...args) => log(`Scraper: ${message}`, ...args),
+                error: (message, ...args) => log(`Scraper Error: ${message}`, ...args),
+            },
         };
 
         if (argv._.includes('scrape')) {
