@@ -77,7 +77,18 @@ app.post('/scrape', async (req, res) => {
         log('Received scrape request:', { type, input, count });
 
         if (!type) {
-            throw new Error('Scrape type is required');
+            log('Error: Scrape type is missing');
+            return res.status(400).json({ error: 'Scrape type is required. Please provide a "type" in your request body.' });
+        }
+
+        if (!['user', 'hashtag', 'trend'].includes(type)) {
+            log(`Error: Invalid scrape type: ${type}`);
+            return res.status(400).json({ error: 'Invalid scrape type. Allowed types are: user, hashtag, trend.' });
+        }
+
+        if (!input && type !== 'trend') {
+            log('Error: Input is missing for non-trend scrape type');
+            return res.status(400).json({ error: 'Input is required for user and hashtag scrape types.' });
         }
 
         const params = {
@@ -99,7 +110,14 @@ app.post('/scrape', async (req, res) => {
         };
         log('Initializing scraper with params:', params);
         const result = await scraperInstance.scrape(params);
-        res.json(result);
+        
+        if (result && result.length > 0) {
+            log(`Successfully scraped ${result.length} items.`);
+            res.json({ success: true, data: result });
+        } else {
+            log('No items scraped.');
+            res.json({ success: false, message: 'No items scraped' });
+        }
     } catch (error) {
         log('Error during scraping:', error);
         res.status(500).json({ error: error.message || 'An error occurred during scraping' });

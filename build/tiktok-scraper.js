@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { getRandomUserAgent } from './constant.js';
+import cheerio from 'cheerio';
 
 class TikTokScraper {
   constructor(options = {}) {
@@ -118,32 +119,32 @@ class TikTokScraper {
   async parseResponse(html) {
     this.logger.log(`Starting parseResponse method. HTML length: ${html.length}`);
 
+    const $ = cheerio.load(html);
     const collector = [];
 
-    this.logger.log(`Applying regex to find video items`);
-    const videoRegex = /<div[^>]*data-e2e="user-post-item"[^>]*>([\s\S]*?)<\/div>/g;
-    let match;
-    let matchCount = 0;
-    while ((match = videoRegex.exec(html)) !== null) {
-      matchCount++;
-      const videoHtml = match[1];
-      this.logger.log(`Found potential video item. HTML snippet: ${videoHtml.substring(0, 100)}...`);
-      const idMatch = videoHtml.match(/data-video-id="([^"]+)"/);
-      const titleMatch = videoHtml.match(/data-e2e="video-title"[^>]*>([^<]+)</);
-      if (idMatch && titleMatch) {
+    this.logger.log(`Applying cheerio to find video items`);
+    
+    $('div[data-e2e="challenge-item"]').each((index, element) => {
+      const videoContainer = $(element).find('a.css-1wrhn5c-AMetaCaptionLine');
+      const videoUrl = videoContainer.attr('href');
+      const videoId = videoUrl ? videoUrl.split('/').pop() : null;
+      const videoTitle = videoContainer.find('h1.css-198cw7i-H1Container').text().trim();
+
+      if (videoId && videoTitle) {
         collector.push({
-          id: idMatch[1],
-          title: titleMatch[1].trim()
+          id: videoId,
+          title: videoTitle,
+          url: videoUrl
         });
-        this.logger.log(`Found video item: ID=${idMatch[1]}, Title=${titleMatch[1].trim()}`);
+        this.logger.log(`Found video item: ID=${videoId}, Title=${videoTitle}`);
       } else {
-        this.logger.log(`Found partial match but couldn't extract all info. ID match: ${!!idMatch}, Title match: ${!!titleMatch}`);
+        this.logger.log(`Found partial match but couldn't extract all info. ID: ${videoId}, Title: ${videoTitle}`);
       }
-    }
+    });
 
-    this.logger.log(`Parsing complete. Total matches: ${matchCount}, Collected items: ${collector.length}`);
+    this.logger.log(`Parsing complete. Collected items: ${collector.length}`);
 
-    return { collector };
+    return collector;
   }
 }
 
