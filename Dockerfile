@@ -19,9 +19,9 @@ RUN apk update && apk add --no-cache \
     harfbuzz \
     ca-certificates \
     ttf-freefont \
-    libjpeg-turbo-dev \     # Added for JPEG support
-    giflib-dev \            # Added for GIF support
-    libpng-dev              # Added for PNG support
+    libjpeg-turbo-dev \
+    giflib-dev \
+    libpng-dev
 
 # Copy package.json and package-lock.json
 COPY package*.json ./
