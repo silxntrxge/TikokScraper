@@ -6,19 +6,23 @@ import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import TikTokScraper from '../build/tiktok-scraper.js';
 import { createRequire } from 'module';
+import fs from 'fs';
 const require = createRequire(import.meta.url);
 const { version } = require('../package.json');
 import { getRandomUserAgent } from '../build/constant.js';
 import { fileURLToPath } from 'url';
 
-console.log(`[${new Date().toISOString()}] CLI script started`);
+const logFile = fs.createWriteStream('scraper.log', { flags: 'a' });
 
-// Add this function for detailed logging
 function log(message, data = null) {
     const timestamp = new Date().toISOString();
-    console.log(`[${timestamp}] ${message}`);
+    const logMessage = `[${timestamp}] ${message}`;
+    console.log(logMessage);
+    logFile.write(logMessage + '\n');
     if (data) {
-        console.log(JSON.stringify(data, null, 2));
+        const dataString = JSON.stringify(data, null, 2);
+        console.log(dataString);
+        logFile.write(dataString + '\n');
     }
 }
 
