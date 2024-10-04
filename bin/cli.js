@@ -76,9 +76,13 @@ app.post('/scrape', async (req, res) => {
         const { type, input, count } = req.body;
         log('Received scrape request:', { type, input, count });
 
+        if (!type) {
+            throw new Error('Scrape type is required');
+        }
+
         const params = {
             type,
-            input,
+            input: input || '',
             count: count || 10,
             download: false,
             filepath: '',
@@ -94,11 +98,11 @@ app.post('/scrape', async (req, res) => {
             },
         };
         log('Initializing scraper with params:', params);
-        const result = await scraperInstance.scrape(type, params);
+        const result = await scraperInstance.scrape(params);
         res.json(result);
     } catch (error) {
         log('Error during scraping:', error);
-        res.status(500).json({ error: 'An error occurred during scraping' });
+        res.status(500).json({ error: error.message || 'An error occurred during scraping' });
     }
 });
 

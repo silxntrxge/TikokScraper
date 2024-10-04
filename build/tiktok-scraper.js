@@ -13,9 +13,10 @@ class TikTokScraper {
     this.logger.log(`[${new Date().toISOString()}] TikTokScraper: Constructor called with params:`, this.params);
   }
 
-  async scrape() {
+  async scrape(params) {
     this.logger.log('Starting scrape operation...');
     try {
+      this.params = { ...this.params, ...params };
       let items = [];
       switch (this.params.type) {
         case 'user':
