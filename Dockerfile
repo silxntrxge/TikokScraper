@@ -3,8 +3,25 @@ FROM node:18-alpine AS tiktok_scraper.build
 
 WORKDIR /usr/app
 
-# Install necessary Alpine packages
-RUN apk update && apk add --no-cache python3 pkgconfig pixman-dev cairo-dev pango-dev make g++ chromium nss freetype freetype-dev harfbuzz ca-certificates ttf-freefont
+# Install necessary Alpine packages along with additional dependencies for canvas
+RUN apk update && apk add --no-cache \
+    python3 \
+    pkgconfig \
+    pixman-dev \
+    cairo-dev \
+    pango-dev \
+    make \
+    g++ \
+    chromium \
+    nss \
+    freetype \
+    freetype-dev \
+    harfbuzz \
+    ca-certificates \
+    ttf-freefont \
+    libjpeg-turbo-dev \     # Added for JPEG support
+    giflib-dev \            # Added for GIF support
+    libpng-dev              # Added for PNG support
 
 # Copy package.json and package-lock.json
 COPY package*.json ./
@@ -31,7 +48,15 @@ FROM node:18-alpine AS tiktok_scraper.use
 WORKDIR /usr/app
 
 # Install necessary Alpine packages
-RUN apk update && apk add --no-cache python3 chromium nss freetype freetype-dev harfbuzz ca-certificates ttf-freefont
+RUN apk update && apk add --no-cache \
+    python3 \
+    chromium \
+    nss \
+    freetype \
+    freetype-dev \
+    harfbuzz \
+    ca-certificates \
+    ttf-freefont
 
 # Copy necessary files from the build stage
 COPY --from=tiktok_scraper.build /usr/app/package*.json ./
