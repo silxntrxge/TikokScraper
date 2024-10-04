@@ -39,7 +39,7 @@ class TikTokScraper {
       this.logger.log(`Scrape completed. Found ${items.length} items.`);
       return {
         collector: items,
-        // ... (other properties)
+        // ... (other properties if needed)
       };
     } catch (error) {
       this.logger.error('Error during scrape operation:', error);
@@ -49,8 +49,6 @@ class TikTokScraper {
 
   async getUserFeed() {
     this.logger.log('Fetching user feed...');
-    // Implement scraping logic for user feed
-    // Example placeholder:
     try {
       const url = `https://www.tiktok.com/@${this.params.input}`;
       this.logger.log(`Making request to TikTok API: ${url}`);
@@ -83,8 +81,6 @@ class TikTokScraper {
 
   async getTrendingFeed() {
     this.logger.log('Fetching trending feed...');
-    // Implement scraping logic for trending feed
-    // Example placeholder:
     try {
       const url = `https://www.tiktok.com/trending`;
       this.logger.log(`Making request to TikTok API: ${url}`);
@@ -111,7 +107,7 @@ class TikTokScraper {
         this.logger.error(`Request failed (attempt ${i + 1}):`, error.message);
         if (i === retries - 1) throw error;
         this.logger.log(`Waiting before retry...`);
-        await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1))); // Exponential backoff
+        await new Promise((resolve) => setTimeout(resolve, 1000 * (i + 1))); // Exponential backoff
       }
     }
   }
@@ -123,22 +119,29 @@ class TikTokScraper {
     const collector = [];
 
     this.logger.log(`Applying cheerio to find video items`);
-    
-    $('div[data-e2e="challenge-item"]').each((index, element) => {
-      const videoContainer = $(element).find('a.css-1wrhn5c-AMetaCaptionLine');
-      const videoUrl = videoContainer.attr('href');
-      const videoId = videoUrl ? videoUrl.split('/').pop() : null;
+
+    // Select all video containers based on the CSS classes observed in the HTML
+    $('div.css-supo48-DivPlayerContainer').each((index, element) => {
+      const videoContainer = $(element);
+
+      // Extract the video URL
+      const videoUrl = videoContainer.find('video').attr('src');
+      const videoId = videoUrl ? videoUrl.split('/').pop().split('?')[0] : null;
+
+      // Extract the video title
       const videoTitle = videoContainer.find('h1.css-198cw7i-H1Container').text().trim();
 
-      if (videoId && videoTitle) {
+      if (videoId && videoTitle && videoUrl) {
         collector.push({
           id: videoId,
           title: videoTitle,
-          url: videoUrl
+          url: videoUrl,
         });
-        this.logger.log(`Found video item: ID=${videoId}, Title=${videoTitle}`);
+        this.logger.log(`Found video item: ID=${videoId}, Title=${videoTitle}, URL=${videoUrl}`);
       } else {
-        this.logger.log(`Found partial match but couldn't extract all info. ID: ${videoId}, Title: ${videoTitle}`);
+        this.logger.log(
+          `Found partial match but couldn't extract all info. ID: ${videoId}, Title: ${videoTitle}, URL: ${videoUrl}`
+        );
       }
     });
 
