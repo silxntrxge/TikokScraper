@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+console.log('Starting application...');
+
 import express from 'express';
 import path from 'path';
 import yargs from 'yargs';
@@ -12,17 +14,13 @@ const { version } = require('../package.json');
 import { getRandomUserAgent } from '../build/constant.js';
 import { fileURLToPath } from 'url';
 
-const logFile = fs.createWriteStream('scraper.log', { flags: 'a' });
-
 function log(message, data = null) {
     const timestamp = new Date().toISOString();
     const logMessage = `[${timestamp}] ${message}`;
     console.log(logMessage);
-    logFile.write(logMessage + '\n');
     if (data) {
         const dataString = JSON.stringify(data, null, 2);
         console.log(dataString);
-        logFile.write(dataString + '\n');
     }
 }
 
@@ -66,7 +64,7 @@ const argv = yargs(hideBin(process.argv))
     .parse();
 
 const app = express();
-const defaultPort = 10000;
+const PORT = process.env.PORT || 10000;
 
 app.use(express.json());
 
@@ -76,6 +74,8 @@ const scraperInstance = new TikTokScraper();
 app.post('/scrape', async (req, res) => {
     try {
         const { type, input, count } = req.body;
+        log('Received scrape request:', { type, input, count });
+
         const params = {
             type,
             input,
@@ -93,10 +93,11 @@ app.post('/scrape', async (req, res) => {
                 'user-agent': getRandomUserAgent(),
             },
         };
+        log('Initializing scraper with params:', params);
         const result = await scraperInstance.scrape(type, params);
         res.json(result);
     } catch (error) {
-        console.error('Error during scraping:', error);
+        log('Error during scraping:', error);
         res.status(500).json({ error: 'An error occurred during scraping' });
     }
 });
@@ -132,16 +133,16 @@ async function startScraper() {
                 count: argv.count,
             };
             log('CLI: Scraping with params:', params);
-            
+
             log('CLI: Initializing scraper...');
             const scraper = new TikTokScraper(params);
             log('CLI: Scraper initialized. Starting scrape...');
-            
+
             try {
                 log('CLI: Calling scrape method...');
                 const result = await scraper.scrape();
                 log('CLI: Scrape method completed. Analyzing results...');
-                
+
                 if (result && result.collector && result.collector.length > 0) {
                     log(`CLI: Successfully scraped ${result.collector.length} items.`);
                     log('CLI: First few scraped items:', result.collector.slice(0, 3));
@@ -181,6 +182,11 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     startScraper().then(() => {
         log('CLI scraper finished, exiting');
         process.exit(0);
+    });
+} else {
+    // Start the Express server if imported
+    app.listen(PORT, () => {
+        console.log(`Server started on port ${PORT}`);
     });
 }
 
