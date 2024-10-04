@@ -1,11 +1,15 @@
-declare module 'request' {
+import { CookieJar as RequestCookieJar } from 'request';
+
+declare module 'request-promise' {
     export interface OptionsWithUri {
         uri: string;
         // Add other properties as needed
     }
 }
 
-declare class CookieJar {}
+declare module 'request' {
+    export class CookieJar {}
+}
 
 // More specific declarations
 declare module 'api/tiktokMusic' {}
@@ -37,7 +41,7 @@ export interface DownloaderConstructor {
     headers: Headers;
     filepath: string;
     bulk: boolean;
-    cookieJar: CookieJar;
+    cookieJar: RequestCookieJar;
 }
 
 export interface PostCollector {
@@ -99,19 +103,85 @@ export interface RequestQuery {
 }
 
 export interface UserMetadata {
-    // Define properties based on usage in TikTokScraper
+    user: {
+        id: string;
+        secUid: string;
+        uniqueId: string;
+        nickname: string;
+        verified: boolean;
+        signature: string;
+        avatarLarger: string;
+    };
 }
 
 export interface HashtagMetadata {
-    // Define properties based on usage in TikTokScraper
+    challengeInfo: {
+        challenge: {
+            id: string;
+            title: string;
+            desc: string;
+            coverLarger: string;
+        };
+    };
 }
 
 export interface FeedItems {
-    // Define properties based on usage in TikTokScraper
+    id: string;
+    desc: string;
+    createTime: number;
+    author: {
+        id: string;
+        secUid: string;
+        uniqueId: string;
+        nickname: string;
+        verified: boolean;
+        signature: string;
+        avatarLarger: string;
+    };
+    authorStats: {
+        followingCount: number;
+        followerCount: number;
+        heartCount: number;
+        videoCount: number;
+        diggCount: number;
+    };
+    music: {
+        id: string;
+        title: string;
+        authorName: string;
+        original: boolean;
+        coverThumb: string;
+        coverMedium: string;
+        coverLarge: string;
+        duration: number;
+    };
+    video: {
+        id: string;
+        playAddr: string;
+        cover: string;
+        originCover: string;
+        dynamicCover: string;
+        width: number;
+        height: number;
+        duration: number;
+    };
+    stats: {
+        diggCount: number;
+        shareCount: number;
+        playCount: number;
+        commentCount: number;
+    };
+    challenges: Hashtag[];
+    effectStickers: EffectSticker[];
 }
 
 export interface ItemListData {
-    // Define properties based on usage in TikTokScraper
+    statusCode: number;
+    hasMore: boolean;
+    maxCursor: string;
+    cursor: string;
+    itemList: FeedItems[];
+    items: FeedItems[];
 }
 
 export interface TikTokMetadata {
@@ -150,8 +220,6 @@ export interface HistoryItem {
 export interface MusicMetadata {
     // Define properties based on usage in TikTokScraper
 }
-
-// Define other necessary interfaces below...
 
 export interface AuthorMeta {
     id: string;
@@ -201,10 +269,3 @@ export interface EffectSticker {
     id: string;
     name: string;
 }
-
-// ... remove or update the placeholder interface ...
-
-// Remove the placeholder interface if it's no longer needed
-// export interface YourType {
-//     // ... your type definitions ...
-// }

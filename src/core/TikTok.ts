@@ -13,7 +13,7 @@ import EventEmitter from 'events';
 import { SocksProxyAgent } from 'socks-proxy-agent';
 import { forEachLimit } from 'async';
 import { URLSearchParams } from 'url';
-import CONST from '../constant';
+import * as CONST from '../constant';
 import { sign, makeid } from '../helpers';
 
 import {
@@ -466,8 +466,15 @@ export class TikTokScraper extends EventEmitter {
                 ...(this.webHookUrl ? { webhook: this.httpRequests } : {}),
             };
         } catch (error) {
-            console.error(`Scraper error: ${error.message}`);
-            throw error;
+            if (error instanceof Error) {
+                // Now TypeScript knows 'error' is of type 'Error'
+                console.error(`Scraper error: ${error.message}`);
+                throw error;
+            } else {
+                // Handle non-Error types if necessary
+                console.error('An unexpected error occurred.');
+                throw new Error('An unexpected error occurred.');
+            }
         }
     }
 

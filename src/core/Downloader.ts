@@ -2,7 +2,7 @@
 /* eslint-disable no-param-reassign */
 /* eslint-disable consistent-return */
 /* eslint-disable no-console */
-import request, { CookieJar } from 'request';
+import request, { CookieJar as RequestCookieJar } from 'request';
 import rp from 'request-promise';
 import { Agent } from 'http';
 import { createWriteStream, writeFile } from 'fs';
@@ -15,6 +15,7 @@ import cheerio from 'cheerio';
 
 import { MultipleBar } from '../helpers';
 import { DownloaderConstructor, PostCollector, DownloadParams, Proxy, Headers } from '../types';
+import { OptionsWithUri } from 'request-promise';
 
 export class Downloader {
     public progress: boolean;
@@ -33,7 +34,7 @@ export class Downloader {
 
     public headers: Headers;
 
-    public cookieJar: CookieJar;
+    public cookieJar: RequestCookieJar;
 
     constructor({ progress, proxy, noWaterMark, headers, filepath, bulk, cookieJar }: DownloaderConstructor) {
         this.progress = true || progress;
