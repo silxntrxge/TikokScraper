@@ -2,7 +2,7 @@
 /* eslint-disable no-param-reassign */
 /* eslint-disable consistent-return */
 /* eslint-disable no-console */
-import request from 'request';
+import request, { CookieJar } from 'request';
 import rp from 'request-promise';
 import { Agent } from 'http';
 import { createWriteStream, writeFile } from 'fs';

@@ -1,5 +1,6 @@
 import express from 'express';
 import { Downloader } from '../core/Downloader';
+import request from 'request'; // Added import for 'request'
 
 const router = express.Router();
 

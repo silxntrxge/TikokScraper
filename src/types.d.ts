@@ -28,3 +28,8 @@ declare module 'tiktok-scraper' {
 
 declare module 'request';
 declare module '../utils/protobuf';
+
+// Define it as a module
+export interface YourType {
+    // ... your type definitions ...
+}
