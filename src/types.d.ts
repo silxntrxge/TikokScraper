@@ -25,3 +25,6 @@ declare module 'tiktok-scraper' {
 
     // Add other necessary type declarations
 }
+
+declare module 'request';
+declare module '../utils/protobuf';

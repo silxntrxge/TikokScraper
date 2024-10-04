@@ -68,7 +68,7 @@
     "@types/puppeteer": "^5.4.4"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc --skipLibCheck",
     "docker:build": "tsc",
     "format": "prettier --config ./.prettierrc.js --write './src/**/*.ts'",
     "lint": "eslint ./src/**/*.ts",
